@@ -27,7 +27,7 @@ export class BooksService extends GenericService<Book, BookDto> {
       book_id: book.id,
     }));
     await this.userBookModel.bulkCreate<UserBook>(userBooks);
-    return { data: book, success: true, messages: 'Book created successfully' };
+    return { data: book, success: true, message: 'Book created successfully' };
   }
 
   async update(body: BookDto, id: number): Promise<ResponseDTO<Book>> {
@@ -47,7 +47,7 @@ export class BooksService extends GenericService<Book, BookDto> {
     return {
       data: book[1][0],
       success: true,
-      messages: 'Book updated successfully',
+      message: 'Book updated successfully',
     };
   }
 }

@@ -28,12 +28,14 @@ export class CustomeExceptionsFilter implements ExceptionFilter {
       | any,
     host: ArgumentsHost,
   ): void {
-    let messages: string | string[] = 'Something went wrong!';
+    let message: string | string[] =
+      exception?.message || 'Something went wrong!';
 
     const ctx = host.switchToHttp();
 
     const request = ctx.getRequest();
     const response = ctx.getResponse();
+    console.log(exception);
 
     let statusCode =
       exception instanceof HttpException
@@ -42,32 +44,30 @@ export class CustomeExceptionsFilter implements ExceptionFilter {
 
     if (exception?.name === 'SequelizeValidationError') {
       statusCode = HttpStatus.BAD_REQUEST;
-      messages = exception.errors.map((err: any) => err.message);
+      message = exception.errors.map((err: any) => err.message);
     }
 
     if (exception && exception?.name === 'SequelizeUniqueConstraintError') {
       statusCode = HttpStatus.BAD_REQUEST;
-      messages = exception.errors.map((err: any) => err.message);
+      message = exception.errors.map((err: any) => err.message);
     }
 
     if (exception.errors) {
-      messages = exception.errors.map((err: any) => err.message);
+      message = exception.errors.map((err: any) => err.message);
     }
-
-    console.log(exception);
 
     const logBody: any = {
       statusCode,
       path: request.url,
       method: request.method,
       errorName: exception?.name,
-      message: messages,
+      message: message,
     };
 
     const responseBody = {
       statusCode,
       success: false,
-      messages,
+      message,
     };
     this.logger.error(
       `Request Method : ${request.method} | Request Path : ${

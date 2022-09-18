@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { User } from './user.entity';
 import { UserDto } from './dto/user.dto';
 import * as bcrypt from 'bcryptjs';
@@ -7,10 +11,14 @@ import { Book } from '../books/entities/book.entity';
 import { InjectModel } from '@nestjs/sequelize';
 import { GenericService } from '../generic/generic.service';
 import { ResponseDTO } from '../generic/interfaces/response.interface';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService extends GenericService<User, UserDto> {
-  constructor(@InjectModel(User) private readonly userModel: typeof User) {
+  constructor(
+    @InjectModel(User) private readonly userModel: typeof User,
+    private jwtService: JwtService,
+  ) {
     super(User, [
       { model: Post },
       { model: Book, through: { attributes: [] } },
@@ -23,10 +31,13 @@ export class UsersService extends GenericService<User, UserDto> {
     }
     let newUser = await this.userModel.create<User>(user);
     newUser.password = undefined;
+
+    const token = await this.createToken(newUser.id, newUser.email);
     return {
+      token,
       data: newUser,
       success: true,
-      messages: 'User Created Successfully',
+      message: 'User Created Successfully',
     };
   }
 
@@ -35,25 +46,32 @@ export class UsersService extends GenericService<User, UserDto> {
       where: { email },
       include: [{ model: Post }, { model: Book, through: { attributes: [] } }],
     });
+
+    if (!data) throw new NotFoundException('User not found!');
     return { data, success: true };
   }
 
   async signin(user: UserDto): Promise<ResponseDTO<User>> {
-    let isExits = await this.userModel.findOne<User>({
+    let isExitingUser = await this.userModel.findOne<User>({
       where: { email: user.email },
     });
-    if (!isExits) {
+    if (!isExitingUser) {
       throw new UnauthorizedException('Invalid credintials!');
     }
 
-    if (!bcrypt.compare(isExits.password, user.password)) {
+    if (!bcrypt.compare(isExitingUser.password, user.password)) {
       throw new UnauthorizedException('Invalid credintials!');
     }
-    isExits.password = undefined;
+    isExitingUser.password = undefined;
+    const token = await this.createToken(isExitingUser.id, isExitingUser.email);
     return {
-      data: isExits,
+      token,
+      data: isExitingUser,
       success: true,
-      messages: 'User Created Successfully',
     };
+  }
+
+  private async createToken(id: number, email: string): Promise<string> {
+    return await this.jwtService.signAsync({ id, email });
   }
 }

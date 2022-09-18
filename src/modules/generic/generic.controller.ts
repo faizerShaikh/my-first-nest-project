@@ -6,19 +6,19 @@ export class GenericController<ModelClass, CreateDTO, UpdateDTO = undefined> {
     protected service: ServiceInterface<ModelClass, CreateDTO, UpdateDTO>,
   ) {}
 
-  @Post('/')
+  @Post()
   createObj(@Body() body: CreateDTO) {
     return this.service?.create(body);
+  }
+
+  @Get()
+  getAllObj() {
+    return this.service?.findAll();
   }
 
   @Put('/:id')
   updateObj(@Body() body: UpdateDTO | CreateDTO, @Param('id') id: string) {
     return this.service?.update(body, +id);
-  }
-
-  @Get('/')
-  getAllObj() {
-    return this.service?.findAll();
   }
 
   @Get('/:id')

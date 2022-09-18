@@ -1,9 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import {
   DestroyOptions,
   FindOptions,
   IncludeOptions,
-  Model,
   UpdateOptions,
 } from 'sequelize';
 import { ResponseDTO } from './interfaces/response.interface';
@@ -16,17 +15,13 @@ export class GenericService<ModelClass, CreateDTO, UpdateDTO = undefined> {
 
   //create an object in database
   async create(dto: CreateDTO): Promise<ResponseDTO<ModelClass>> {
-    try {
-      const obj = await this.model.create(dto);
+    const obj = await this.model.create(dto);
 
-      return {
-        data: obj,
-        success: true,
-        messages: `${this.model.name} created successfully`,
-      };
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
+    return {
+      data: obj,
+      success: true,
+      message: `${this.model.name} created successfully`,
+    };
   }
 
   //update an object in database
@@ -50,7 +45,7 @@ export class GenericService<ModelClass, CreateDTO, UpdateDTO = undefined> {
 
     return {
       success: true,
-      messages: `${this.model.name} updated successfully`,
+      message: `${this.model.name} updated successfully`,
     };
   }
 
@@ -103,7 +98,7 @@ export class GenericService<ModelClass, CreateDTO, UpdateDTO = undefined> {
 
     return {
       success: true,
-      messages: `${this.model.name} deleted successfully`,
+      message: `${this.model.name} deleted successfully`,
     };
   }
 }

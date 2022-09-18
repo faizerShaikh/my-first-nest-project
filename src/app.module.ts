@@ -5,7 +5,9 @@ import { PostsModule } from './modules/posts/posts.module';
 import { BooksModule } from './modules/books/books.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { databaseConfig } from './config/database/database.config';
-import { DEVELOPMENT } from './constants';
+import { DEVELOPMENT } from 'src/common/constants';
+import { APP_GUARD } from '@nestjs/core';
+import { JWTGuard } from 'src/common/guards/jwt.guard';
 
 @Module({
   imports: [
@@ -21,5 +23,11 @@ import { DEVELOPMENT } from './constants';
     BooksModule,
   ],
   exports: [SequelizeModule],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JWTGuard,
+    },
+  ],
 })
 export class AppModule {}
